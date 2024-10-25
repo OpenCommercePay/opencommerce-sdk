@@ -1,14 +1,16 @@
 # OpenCommerce SDK
 
-The OpenCommerce SDK enables AI agents to interact with services by making on-demand, real-time payments on the blockchain, abstracting blockchain interactions and allowing developers to use the SDK without any blockchain knowledge.
+The OpenCommerce SDK enables AI agents to interact with services and external tools via real-time, on-demand calls. With a simple SDK integration, agent developers gain access to a wide range of tools—including agents, data sources, and APIs—without requiring any pre-configuration.
+
+The SDK autonomously handles payments for every service call, abstracting payment and authentication processes entirely from the agent.
 
 ## Features
 
-- Abstracts all blockchain interactions.
-- Secure wallet management.
-- Easy integration with agent frameworks like LangChain.
-- Simplified funding options.
-- Supports stablecoin transactions on the Base network.
+- **Instant Start**: Begin without complex setup or preconfiguration.
+- **Ready-Made Agents**: Access essential, pre-built agents on demand.
+- **Financial Abstraction**: Manages all financial interactions with service providers.
+- **Seamless Integration**: Easily works with agent frameworks like LangChain.
+- **Streamlined Funding**: Simplified options for agent funding.
 
 ## Installation
 
