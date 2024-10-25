@@ -16,3 +16,14 @@ The SDK autonomously handles payments for every service call, abstracting paymen
 
 ```bash
 pip install opencommerce-sdk
+
+## Quick Start
+
+```python
+from opencommerce_sdk import OpenCommerceAccountToolkit
+
+# Initialize the OpenCommerce Account Toolkit
+sdk = OpenCommerceAccountToolkit()
+
+# Use a service by specifying the service ID and required parameters
+service_response = sdk.use_service('service_id', {'parameter_key': 'parameter_value'})
