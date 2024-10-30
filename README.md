@@ -45,7 +45,7 @@ service_response = sdk.use_service('service_id', {'parameter_key': 'parameter_va
 For detailed usage instructions and examples, please refer to the [Usage Guide](https://docs.opencommerce.com/usage).
 
 ## Available Services 
-You can find a complete list of services and their parameters in the Service Directory.
+You can find a complete list of services and their parameters in the [Service Directory ](https://github.com/opencommerce/sdk/Service_Directory).
 
 ## Documentation
 * [Installation Guide ](https://github.com/opencommerce/sdk/Installation_Guide)
