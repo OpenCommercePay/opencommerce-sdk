@@ -40,3 +40,24 @@ service_response = sdk.use_service('service_id', {'parameter_key': 'parameter_va
 ```
 - Replace 'service_id' with the actual service ID
 - Replace 'parameter_key' and 'parameter_value' with the required parameters for the service
+
+## Usage
+For detailed usage instructions and examples, please refer to the [Usage Guide](https://docs.opencommerce.com/usage).
+
+## Available Services 
+You can find a complete list of services and their parameters in the Service Directory.
+
+## Documentation
+* Installation Guide
+* Usage Instructions
+* API Reference
+* Service Directory
+
+## Contributing
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+## License
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
+
+## Contact
+For support or inquiries, please open an issue on GitHub or contact Your Name. You can also contact idan@opencommerce.xyx
