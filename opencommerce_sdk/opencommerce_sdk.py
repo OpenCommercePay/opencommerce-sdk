@@ -1,26 +1,27 @@
-# opencommerce_sdk.py
-
 import json
 import os
-import webbrowser
-import logging
-from pathlib import Path
-
-from dotenv import load_dotenv
 from eth_account import Account
-from eth_account.datastructures import SignedTransaction
-from web3 import Web3
+from pathlib import Path
 import requests
-
+from web3 import Web3
+from dotenv import load_dotenv
+import logging
 try:
-    from .service_directory import ServiceDirectory
-except ImportError:
     from service_directory import ServiceDirectory
+except ImportError:
+    # If the module is in the same directory as this file
+    from .service_directory import ServiceDirectory
+    # Or if it's in the parent directory:
+    # from ..service_directory import ServiceDirectory
+import webbrowser
+from eth_account.datastructures import SignedTransaction
+from datetime import datetime
 
 load_dotenv()
 
 class OpenCommerceAccountToolkit:
     USDC_CONTRACT_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
+    ADDRESS_TRACKER_URL = os.getenv('ADDRESS_TRACKER_URL', 'https://address-tracker-service-production.up.railway.app')
     USDC_ABI = [
         {
             "constant": False,
@@ -42,7 +43,7 @@ class OpenCommerceAccountToolkit:
     ]
 
     # Configure basic logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
     def __init__(
         self,
@@ -50,13 +51,29 @@ class OpenCommerceAccountToolkit:
         passphrase: str = None,
         stablecoin_symbol: str = 'USDC'
     ):
-        logging.info("Initializing OpenCommerceAccountToolkit")
+        # Silence all third-party logging
+        logging.getLogger('web3').setLevel(logging.WARNING)
+        logging.getLogger('urllib3').setLevel(logging.WARNING)
+        logging.getLogger('requests').setLevel(logging.WARNING)
+        logging.getLogger('httpx').setLevel(logging.WARNING)
+        logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
+        logging.getLogger('asyncio').setLevel(logging.WARNING)
+        logging.getLogger('ssl').setLevel(logging.WARNING)
+        logging.getLogger('http.client').setLevel(logging.WARNING)
+
+        # Also disable propagation of logs from these loggers
+        for logger_name in ['web3', 'urllib3', 'requests', 'httpx', 'asyncio', 'ssl']:
+            logger = logging.getLogger(logger_name)
+            logger.propagate = False
+
+        logging.info("Initializing OpenCommerce SDK...")
         self.wallet_file = wallet_file
         self.passphrase = passphrase or 'default_passphrase'
         self.stablecoin_symbol = stablecoin_symbol.upper()
         self.w3 = self.initialize_web3()
         self.user_account = self.initialize_wallet()
-        logging.info(f"Wallet address: {self.get_wallet_address()}")
+        self.register_address()
+        logging.info(f"Wallet initialized: {self.get_wallet_address()[:8]}...")
         self.check_and_prompt_funding()
 
     def initialize_web3(self):
@@ -86,20 +103,49 @@ class OpenCommerceAccountToolkit:
                 json.dump(encrypted_key, f)
             logging.info("New wallet created and saved to file.")
         return account
+    
+    def register_address(self):
+        """Register the wallet address with the tracking service"""
+        try:
+            payload = {
+                "address": self.get_wallet_address(),
+                "network": "base-sepolia",
+                "metadata": {
+                    "sdk_version": "1.0.0",
+                    "initialization_time": datetime.utcnow().isoformat(),
+                    "client_type": "opencommerce_sdk"
+                }
+            }
+            
+            response = requests.post(
+                f"{self.ADDRESS_TRACKER_URL}/register_address",
+                json=payload,
+                headers={"Content-Type": "application/json"},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                logging.info(f"Address {self.get_wallet_address()[:8]}... registered successfully")
+            else:
+                logging.warning(f"Failed to register address: {response.status_code} - {response.text}")
+                
+        except Exception:
+            # Silently fail - tracking is optional
+            pass
 
     def get_wallet_address(self):
         return self.user_account.address
 
     def check_balance(self):
-        logging.info("Checking wallet balance")
         eth_balance = self.w3.eth.get_balance(self.get_wallet_address())
         eth_balance_eth = self.w3.from_wei(eth_balance, 'ether')
-        logging.info(f"ETH balance: {eth_balance_eth} ETH")
 
         usdc_contract = self.w3.eth.contract(address=self.USDC_CONTRACT_ADDRESS, abi=self.USDC_ABI)
         usdc_balance = usdc_contract.functions.balanceOf(self.get_wallet_address()).call()
-        usdc_balance_decimal = usdc_balance / 1e6  # USDC has 6 decimal places
-        logging.info(f"USDC balance: {usdc_balance_decimal} USDC")
+        usdc_balance_decimal = usdc_balance / 1e6
+
+        if eth_balance > 0 or usdc_balance > 0:
+            logging.info(f"Balance - ETH: {eth_balance_eth}, USDC: {usdc_balance_decimal}")
 
         return eth_balance, usdc_balance
 
@@ -110,22 +156,17 @@ class OpenCommerceAccountToolkit:
             logging.warning("Insufficient balance detected. Showing funding widget.")
             self.show_funding_widget()
 
- # Need to change to actual funding widget URL 
     def show_funding_widget(self):
         widget_url = "http://localhost:3000"
         full_url = f"{widget_url}?wallet={self.get_wallet_address()}"
-
-        logging.info(f"Opening funding widget: {full_url}")
+        
+        logging.info("Opening funding interface...")
         webbrowser.open(full_url)
-
-        logging.info("Waiting for user to complete funding process...")
         input("Press Enter when you've completed the funding process...")
-
-        logging.info("Re-checking balance after funding")
         self.check_balance()
 
     def use_service(self, service_id: str, params: dict) -> dict:
-        logging.info(f"Attempting to use service: {service_id}")
+        logging.info(f"Initiating service call to {service_id}")
         try:
             service_info = ServiceDirectory.get_service(service_id)
             if not service_info:
@@ -139,12 +180,12 @@ class OpenCommerceAccountToolkit:
                 return
 
             usdc_contract = self.w3.eth.contract(address=self.USDC_CONTRACT_ADDRESS, abi=self.USDC_ABI)
-
+            
             amount = int(service_info['cost'] * 1e6)  # USDC has 6 decimal places
             logging.info(f"Service cost: {amount / 1e6} USDC")
 
             nonce = self.w3.eth.get_transaction_count(self.get_wallet_address())
-
+            
             # Get the latest gas price
             gas_price = self.w3.eth.gas_price
             # Set maxPriorityFeePerGas to be 10% of the current gas price
@@ -153,7 +194,7 @@ class OpenCommerceAccountToolkit:
             max_fee = gas_price + max_priority_fee
 
             txn = usdc_contract.functions.transfer(
-                service_info['address'],
+                service_info['address'], 
                 amount
             ).build_transaction({
                 'chainId': self.w3.eth.chain_id,
@@ -163,16 +204,16 @@ class OpenCommerceAccountToolkit:
                 'nonce': nonce,
             })
 
-            logging.debug(f"Transaction before signing: {txn}")
             signed_txn = self.user_account.sign_transaction(txn)
-            logging.debug(f"Signed transaction: {signed_txn}")
 
             if not isinstance(signed_txn, SignedTransaction):
-                logging.error(f"Expected SignedTransaction, got {type(signed_txn)}")
                 raise TypeError(f"Expected SignedTransaction, got {type(signed_txn)}")
+            
+            if not hasattr(signed_txn, 'raw_transaction'):
+                raise AttributeError("SignedTransaction missing 'raw_transaction' attribute")
 
-            raw_tx_hex = signed_txn.rawTransaction.hex()
-
+            raw_tx_bytes = signed_txn.raw_transaction
+            raw_tx_hex = raw_tx_bytes.hex()
 
             backend_url = "http://localhost:8000/send_transaction"  # Update with actual backend URL
             payload = {
@@ -181,7 +222,8 @@ class OpenCommerceAccountToolkit:
                 "params": params
             }
             logging.info(f"Sending payload to backend: {payload}")
-
+            logging.debug(f"Payload details: signed_tx length: {len(payload['signed_tx'])}, service_id: {payload['service_id']}, params: {payload['params']}")
+            
             response = requests.post(backend_url, json=payload, headers={"Content-Type": "application/json"})
 
             logging.info(f"Backend response status: {response.status_code}")
@@ -189,14 +231,13 @@ class OpenCommerceAccountToolkit:
 
             if response.status_code == 200:
                 result = response.json()
-                logging.info(f"Service {service_id} successfully called")
+                logging.info(f"Service {service_id} call completed successfully")
                 return result["service_response"]
             else:
-                logging.error(f"Backend request failed: {response.text}")
                 raise Exception(f"Backend request failed: {response.text}")
 
         except Exception as e:
-            logging.error(f"Error using service {service_id}: {str(e)}")
+            logging.error(f"Service call failed: {str(e)}")
             raise
 
     def test_connection(self):
@@ -204,4 +245,11 @@ class OpenCommerceAccountToolkit:
         try:
             block = self.w3.eth.get_block('latest')
             logging.info(f"Successfully connected to Base Sepolia. Latest block number: {block.number}")
-    
+        except Exception as e:
+            logging.error(f"Failed to connect to Base Sepolia: {str(e)}")
+
+    def send_transaction(self, signed_txn):
+        logging.info("Sending raw transaction")
+        tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        logging.info(f"Transaction sent. Hash: {tx_hash.hex()}")
+        return tx_hash
