@@ -6,22 +6,62 @@ import requests
 from web3 import Web3
 from dotenv import load_dotenv
 import logging
-try:
-    from service_directory import ServiceDirectory
-except ImportError:
-    # If the module is in the same directory as this file
-    from .service_directory import ServiceDirectory
-    # Or if it's in the parent directory:
-    # from ..service_directory import ServiceDirectory
 import webbrowser
 from eth_account.datastructures import SignedTransaction
 from datetime import datetime
 
+
 load_dotenv()
 
+class ServiceDirectory:
+    BASE_URL = "https://servicedirectory-production.up.railway.app"
+
+    @staticmethod
+    def get_service(service_id: str) -> dict:
+        """Get service information from the public API"""
+        try:
+            response = requests.get(f"{ServiceDirectory.BASE_URL}/services/by-name/{service_id}")
+            if response.status_code == 200:
+                service_data = response.json()
+                return {
+                    'address': service_data['service_metadata']['address'],
+                    'cost': service_data['service_metadata']['cost'],
+                    'url': service_data['url']
+                }
+            else:
+                raise ValueError(f"Service '{service_id}' not found")
+        except Exception as e:
+            logging.error(f"Error fetching service info: {str(e)}")
+            raise
+
+    @staticmethod
+    def list_services() -> list:
+        """List all available services"""
+        try:
+            response = requests.get(f"{ServiceDirectory.BASE_URL}/services/")
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise Exception("Failed to fetch services list")
+        except Exception as e:
+            logging.error(f"Error listing services: {str(e)}")
+            raise
+
 class OpenCommerceAccountToolkit:
-    USDC_CONTRACT_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
-    ADDRESS_TRACKER_URL = os.getenv('ADDRESS_TRACKER_URL', 'https://address-tracker-service-production.up.railway.app')
+    # Network-specific contract addresses
+    NETWORK_CONFIG = {
+        'testnet': {
+            'usdc_address': '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+            'rpc_env_var': 'BASE_SEPOLIA_RPC_URL',
+            'network_name': 'base-sepolia'
+        },
+        'production': {
+            'usdc_address': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            'rpc_env_var': 'BASE_MAINNET_RPC_URL',
+            'network_name': 'base'
+        }
+    }
+
     USDC_ABI = [
         {
             "constant": False,
@@ -49,7 +89,8 @@ class OpenCommerceAccountToolkit:
         self,
         wallet_file: str = 'wallet.json',
         passphrase: str = None,
-        stablecoin_symbol: str = 'USDC'
+        stablecoin_symbol: str = 'USDC',
+        network: str = 'testnet'
     ):
         # Silence all third-party logging
         logging.getLogger('web3').setLevel(logging.WARNING)
@@ -70,18 +111,26 @@ class OpenCommerceAccountToolkit:
         self.wallet_file = wallet_file
         self.passphrase = passphrase or 'default_passphrase'
         self.stablecoin_symbol = stablecoin_symbol.upper()
+        self.network = network.lower()
+        
+        if self.network not in self.NETWORK_CONFIG:
+            raise ValueError(f"Invalid network: {network}. Must be one of: {list(self.NETWORK_CONFIG.keys())}")
+        
+        self.network_config = self.NETWORK_CONFIG[self.network]
+        self.USDC_CONTRACT_ADDRESS = self.network_config['usdc_address']
+        
         self.w3 = self.initialize_web3()
         self.user_account = self.initialize_wallet()
         self.register_address()
-        logging.info(f"Wallet initialized: {self.get_wallet_address()[:8]}...")
+        logging.info(f"Wallet initialized on {self.network}: {self.get_wallet_address()[:8]}...")
         self.check_and_prompt_funding()
 
     def initialize_web3(self):
-        rpc_url = os.getenv('BASE_SEPOLIA_RPC_URL')
+        rpc_url = os.getenv(self.network_config['rpc_env_var'])
         if not rpc_url:
-            logging.error("BASE_SEPOLIA_RPC_URL environment variable is not set")
-            raise ValueError("BASE_SEPOLIA_RPC_URL environment variable is not set")
-        logging.info(f"Connecting to Base Sepolia RPC URL: {rpc_url}")
+            logging.error(f"{self.network_config['rpc_env_var']} environment variable is not set")
+            raise ValueError(f"{self.network_config['rpc_env_var']} environment variable is not set")
+        logging.info(f"Connecting to {self.network} RPC URL: {rpc_url}")
         return Web3(Web3.HTTPProvider(rpc_url))
 
     def initialize_wallet(self):
@@ -109,7 +158,7 @@ class OpenCommerceAccountToolkit:
         try:
             payload = {
                 "address": self.get_wallet_address(),
-                "network": "base-sepolia",
+                "network": self.network_config['network_name'],
                 "metadata": {
                     "sdk_version": "1.0.0",
                     "initialization_time": datetime.utcnow().isoformat(),
@@ -215,7 +264,7 @@ class OpenCommerceAccountToolkit:
             raw_tx_bytes = signed_txn.raw_transaction
             raw_tx_hex = raw_tx_bytes.hex()
 
-            backend_url = "http://localhost:8000/send_transaction"  # Update with actual backend URL
+            backend_url = "https://web-production-5c8af.up.railway.app/"  # Update with actual backend URL
             payload = {
                 "signed_tx": raw_tx_hex,
                 "service_id": service_id,
@@ -224,7 +273,11 @@ class OpenCommerceAccountToolkit:
             logging.info(f"Sending payload to backend: {payload}")
             logging.debug(f"Payload details: signed_tx length: {len(payload['signed_tx'])}, service_id: {payload['service_id']}, params: {payload['params']}")
             
-            response = requests.post(backend_url, json=payload, headers={"Content-Type": "application/json"})
+            response = requests.post(
+                f"{backend_url}/send_transaction",
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            )
 
             logging.info(f"Backend response status: {response.status_code}")
             logging.debug(f"Backend response: {response.text}")
