@@ -57,7 +57,7 @@ You can find a complete list of services and their parameters in the [Service Di
 Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## License
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
+This project is licensed under the MIT License.
 
 ## Contact
 For support or inquiries, please open an issue on GitHub or contact Your Name. You can also contact idan@opencommerce.xyx
