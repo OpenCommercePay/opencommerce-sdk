@@ -48,6 +48,7 @@ class ServiceDirectory:
             raise
 
 class OpenCommerceAccountToolkit:
+    ADDRESS_TRACKER_URL = "https://address-tracker-service-production.up.railway.app"
     # Network-specific contract addresses
     NETWORK_CONFIG = {
         'testnet': {
