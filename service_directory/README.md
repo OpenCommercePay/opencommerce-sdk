@@ -35,4 +35,13 @@ Base URL: `https://servicedirectory-production.up.railway.app`
 
 ## Example Usage
 
-See [example queries and responses](https://github.com/OpenCommerce-xyz/opencommerce-sdk/blob/main/sdk/service_directory.py) for detailed API usage.
+```python
+# List all services
+GET https://servicedirectory-production.up.railway.app/services/
+
+# Get service by name
+GET https://servicedirectory-production.up.railway.app/services/by-name/gpt_researcher
+
+# Get service by ID
+GET https://servicedirectory-production.up.railway.app/services/1
+```
