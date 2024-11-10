@@ -162,5 +162,5 @@ cython_debug/
 #.idea/
 
 #wallets
-wallet.json
-account.json
+**/wallet.json
+**/account.json 
