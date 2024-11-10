@@ -4,7 +4,7 @@ A service registry that provides a centralized directory of agentic services.
 
 ## Current Services
 
-| Service | Description | Cost | URL |
+| Service | Description | Cost/Query | URL |
 |---------|-------------|------|-----|
 | gpt_researcher | GPT Researcher for extensive web research | $0.01 | https://gpt-researcher-service-production.up.railway.app |
 
