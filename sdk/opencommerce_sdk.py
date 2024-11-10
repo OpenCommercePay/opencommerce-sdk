@@ -10,7 +10,6 @@ import webbrowser
 from eth_account.datastructures import SignedTransaction
 from datetime import datetime
 
-
 load_dotenv()
 
 class ServiceDirectory:
@@ -53,12 +52,12 @@ class OpenCommerceAccountToolkit:
     NETWORK_CONFIG = {
         'testnet': {
             'usdc_address': '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-            'rpc_env_var': 'BASE_SEPOLIA_RPC_URL',
+            'rpc_url': 'https://base-sepolia.infura.io/v3/4f2c3c8c48da4d1eafa668260e7840bd',
             'network_name': 'base-sepolia'
         },
         'production': {
             'usdc_address': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-            'rpc_env_var': 'BASE_MAINNET_RPC_URL',
+            'rpc_url': 'https://base-mainnet.infura.io/v3/4f2c3c8c48da4d1eafa668260e7840bd',
             'network_name': 'base'
         }
     }
@@ -88,7 +87,7 @@ class OpenCommerceAccountToolkit:
 
     def __init__(
         self,
-        wallet_file: str = 'wallet.json',
+        account_file: str = 'account.json',
         passphrase: str = None,
         stablecoin_symbol: str = 'USDC',
         network: str = 'testnet'
@@ -109,7 +108,7 @@ class OpenCommerceAccountToolkit:
             logger.propagate = False
 
         logging.info("Initializing OpenCommerce SDK...")
-        self.wallet_file = wallet_file
+        self.account_file = account_file
         self.passphrase = passphrase or 'default_passphrase'
         self.stablecoin_symbol = stablecoin_symbol.upper()
         self.network = network.lower()
@@ -121,47 +120,47 @@ class OpenCommerceAccountToolkit:
         self.USDC_CONTRACT_ADDRESS = self.network_config['usdc_address']
         
         self.w3 = self.initialize_web3()
-        self.user_account = self.initialize_wallet()
+        self.user_account = self.initialize_account()
         self.register_address()
-        logging.info(f"Wallet initialized on {self.network}: {self.get_wallet_address()[:8]}...")
+        logging.info(f"Account initialized on {self.network}: {self.get_account_address()[:8]}...")
         self.check_and_prompt_funding()
 
     def initialize_web3(self):
-        rpc_url = os.getenv(self.network_config['rpc_env_var'])
+        rpc_url = self.network_config['rpc_url']
         if not rpc_url:
-            logging.error(f"{self.network_config['rpc_env_var']} environment variable is not set")
-            raise ValueError(f"{self.network_config['rpc_env_var']} environment variable is not set")
+            logging.error(f"{self.network_config['rpc_url']} environment variable is not set")
+            raise ValueError(f"{self.network_config['rpc_url']} environment variable is not set")
         logging.info(f"Connecting to {self.network} RPC URL: {rpc_url}")
         return Web3(Web3.HTTPProvider(rpc_url))
 
-    def initialize_wallet(self):
-        logging.info(f"Initializing wallet from file: {self.wallet_file}")
+    def initialize_account(self):
+        logging.info(f"Initializing account from file: {self.account_file}")
         try:
-            if Path(self.wallet_file).is_file():
-                with open(self.wallet_file, 'r') as f:
+            if Path(self.account_file).is_file():
+                with open(self.account_file, 'r') as f:
                     encrypted_key = json.load(f)
                     private_key = Account.decrypt(encrypted_key, self.passphrase)
                     account = Account.from_key(private_key)
-                    logging.info("Wallet loaded from file.")
+                    logging.info("Account loaded from file.")
             else:
                 raise FileNotFoundError
         except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
-            logging.warning(f"Error loading wallet: {str(e)}. Creating new wallet...")
+            logging.warning(f"Error loading account: {str(e)}. Creating new account...")
             account = Account.create()
             encrypted_key = Account.encrypt(account._private_key, self.passphrase)
-            with open(self.wallet_file, 'w') as f:
+            with open(self.account_file, 'w') as f:
                 json.dump(encrypted_key, f)
-            logging.info("New wallet created and saved to file.")
+            logging.info("New account created and saved to file.")
         return account
     
     def register_address(self):
-        """Register the wallet address with the tracking service"""
+        """Register the account address with the tracking service"""
         try:
             payload = {
-                "address": self.get_wallet_address(),
+                "address": self.get_account_address(),
                 "network": self.network_config['network_name'],
                 "metadata": {
-                    "sdk_version": "1.0.0",
+                    "sdk_version": "1.1.0",
                     "initialization_time": datetime.utcnow().isoformat(),
                     "client_type": "opencommerce_sdk"
                 }
@@ -175,7 +174,7 @@ class OpenCommerceAccountToolkit:
             )
             
             if response.status_code == 200:
-                logging.info(f"Address {self.get_wallet_address()[:8]}... registered successfully")
+                logging.info(f"Address {self.get_account_address()[:8]}... registered successfully")
             else:
                 logging.warning(f"Failed to register address: {response.status_code} - {response.text}")
                 
@@ -183,15 +182,15 @@ class OpenCommerceAccountToolkit:
             # Silently fail - tracking is optional
             pass
 
-    def get_wallet_address(self):
+    def get_account_address(self):
         return self.user_account.address
 
     def check_balance(self):
-        eth_balance = self.w3.eth.get_balance(self.get_wallet_address())
+        eth_balance = self.w3.eth.get_balance(self.get_account_address())
         eth_balance_eth = self.w3.from_wei(eth_balance, 'ether')
 
         usdc_contract = self.w3.eth.contract(address=self.USDC_CONTRACT_ADDRESS, abi=self.USDC_ABI)
-        usdc_balance = usdc_contract.functions.balanceOf(self.get_wallet_address()).call()
+        usdc_balance = usdc_contract.functions.balanceOf(self.get_account_address()).call()
         usdc_balance_decimal = usdc_balance / 1e6
 
         if eth_balance > 0 or usdc_balance > 0:
@@ -207,8 +206,8 @@ class OpenCommerceAccountToolkit:
             self.show_funding_widget()
 
     def show_funding_widget(self):
-        widget_url = "http://localhost:3000"
-        full_url = f"{widget_url}?wallet={self.get_wallet_address()}"
+        widget_url = "https://fundingwidget-production.up.railway.app/"
+        full_url = f"{widget_url}?wallet={self.get_account_address()}"
         
         logging.info("Opening funding interface...")
         webbrowser.open(full_url)
@@ -234,7 +233,7 @@ class OpenCommerceAccountToolkit:
             amount = int(service_info['cost'] * 1e6)  # USDC has 6 decimal places
             logging.info(f"Service cost: {amount / 1e6} USDC")
 
-            nonce = self.w3.eth.get_transaction_count(self.get_wallet_address())
+            nonce = self.w3.eth.get_transaction_count(self.get_account_address())
             
             # Get the latest gas price
             gas_price = self.w3.eth.gas_price
