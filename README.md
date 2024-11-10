@@ -29,9 +29,9 @@ from opencommerce_sdk import OpenCommerceAccountToolkit
 ## Initialize the Account Toolkit
 
 ```python
-sdk = OpenCommerceAccountToolkit()
+sdk = OpenCommerceAccountToolkit(network='testnet')
 ```
-
+- raplace 'testnet' with 'production' for using real USDC
 
 
 ## Use a service 
