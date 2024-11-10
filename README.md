@@ -60,4 +60,4 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for g
 This project is licensed under the MIT License.
 
 ## Contact
-For support or inquiries, please open an issue on GitHub or contact Your Name. You can also contact idan@opencommerce.xyx
+For support or inquiries, please open an issue on GitHub or contact Your Name. You can also contact idan@opencommerce.xyz
