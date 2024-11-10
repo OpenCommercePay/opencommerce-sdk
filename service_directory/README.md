@@ -6,7 +6,7 @@ A service registry that provides a centralized directory of agentic services.
 
 | Service | Description | Cost | URL |
 |---------|-------------|------|-----|
-| gpt_researcher | GPT Researcher for stock analysis | $0.01 | https://gpt-researcher-service-production.up.railway.app |
+| gpt_researcher | GPT Researcher for extensive web research | $0.01 | https://gpt-researcher-service-production.up.railway.app |
 
 ## Service Schema
 
