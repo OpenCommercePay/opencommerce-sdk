@@ -65,10 +65,10 @@ response = await agent.arun(
 ```
 
 ## Key Components
-
 - `OpenCommerceAccountToolkit`: Main SDK interface
 - `network`: Use 'testnet' for development
 - `Tool`: LangChain class for tools
+- AgentType.ZERO_SHOT_REACT_DESCRIPTION: LangChain agent that uses a simple prompt to determine which tools to use without requiring examples. Makes decisions based on tool descriptions.
 
 ## Available Services
 
