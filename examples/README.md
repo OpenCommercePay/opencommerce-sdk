@@ -68,7 +68,7 @@ response = await agent.arun(
 
 - `OpenCommerceAccountToolkit`: Main SDK interface
 - `network`: Use 'testnet' for development
-- `Tool`: LangChain wrapper for OpenCommerce services
+- `Tool`: LangChain class for tools
 
 ## Available Services
 
