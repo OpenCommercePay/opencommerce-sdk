@@ -7,7 +7,7 @@ A service registry that provides a centralized directory of agentic services.
 | Service | Description | Cost/Query | URL |
 |---------|-------------|------|-----|
 | gpt_researcher | GPT Researcher for extensive web research | $0.01 | https://gpt-researcher-service-production.up.railway.app |
-| tavily | Tavily is a search engine tailored for AI agents | $0.015 | https://tavily-search-service-production.up.railway.app |
+| tavily_search | Search engine tailored for AI agents | $0.015 | https://tavily-search-service-production.up.railway.app |
 
 
 ## Service Schema
