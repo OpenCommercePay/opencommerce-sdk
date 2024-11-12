@@ -47,14 +47,6 @@ For detailed usage instructions and examples, please refer to the [Usage Guide](
 ## Available Services 
 You can find a complete list of services and their parameters in the [Service Directory ](https://github.com/OpenCommerce-xyz/opencommerce-sdk/tree/main/service_directory).
 
-## Documentation
-* [Installation Guide ](https://github.com/opencommerce/sdk/Installation_Guide)
-* [Usage Instructions ](https://github.com/opencommerce/sdk/Usage_Instructions)
-* [API Reference ](https://github.com/opencommerce/sdk/API_Reference)
-* [Service Directory ](https://github.com/opencommerce/sdk/Service_Directory)
-
-## Contributing
-Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## License
 This project is licensed under the MIT License.
