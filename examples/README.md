@@ -74,6 +74,7 @@ response = await agent.arun(
 
 Currently available services:
 - `gpt_researcher`: AI research tool for stock analysis
+- `tavily_search` : Search engine tailored for AI agents
 
 ## Environment Setup
 
