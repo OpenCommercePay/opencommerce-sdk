@@ -264,7 +264,7 @@ class OpenCommerceAccountToolkit:
             raw_tx_bytes = signed_txn.raw_transaction
             raw_tx_hex = raw_tx_bytes.hex()
 
-            backend_url = "https://web-production-5c8af.up.railway.app/"  # Update with actual backend URL
+            backend_url = "https://web-production-5c8af.up.railway.app"  # Update with actual backend URL
             payload = {
                 "signed_tx": raw_tx_hex,
                 "service_id": service_id,

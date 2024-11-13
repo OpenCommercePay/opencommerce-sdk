@@ -31,7 +31,7 @@ from opencommerce_sdk import OpenCommerceAccountToolkit
 ```python
 sdk = OpenCommerceAccountToolkit(network='testnet')
 ```
-- raplace 'testnet' with 'production' for using real USDC
+- Replace 'testnet' with 'production' for using real USDC
 
 
 ## Use a service 
