@@ -1,0 +1,9 @@
+opencommerce-sdk==1.1.2
+web3==7.6.0
+eth-account==0.13.4
+eth-utils==5.1.0
+python-dotenv==1.0.0
+requests==2.32.3
+pydantic==2.10.1
+aiohttp==3.11.7
+typing-extensions==4.12.2

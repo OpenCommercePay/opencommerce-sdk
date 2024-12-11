@@ -160,7 +160,7 @@ class OpenCommerceAccountToolkit:
                 "address": self.get_account_address(),
                 "network": self.network_config['network_name'],
                 "metadata": {
-                    "sdk_version": "1.1.0",
+                    "sdk_version": "1.1.2",
                     "initialization_time": datetime.utcnow().isoformat(),
                     "client_type": "opencommerce_sdk"
                 }
@@ -206,7 +206,7 @@ class OpenCommerceAccountToolkit:
             self.show_funding_widget()
 
     def show_funding_widget(self):
-        widget_url = "https://fundingwidget-production.up.railway.app/"
+        widget_url = "https://fundingwidget-production.up.railway.app"
         full_url = f"{widget_url}?wallet={self.get_account_address()}"
         
         logging.info("Opening funding interface...")
