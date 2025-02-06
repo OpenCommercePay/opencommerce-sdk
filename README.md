@@ -1,4 +1,4 @@
-# OpenCommerce SDK
+# OpenCommerce StableCoins SDK
 
 The OpenCommerce SDK enables AI agents to interact with services and external tools via real-time, on-demand calls. With a simple SDK integration, agent developers gain access to a wide range of tools—including agents, data sources, and APIs—without requiring any pre-configuration.
 
